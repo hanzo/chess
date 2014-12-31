@@ -61,6 +61,14 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ChessEngine\Match.cs" />
+    <Compile Include="ChessEngine\PieceMove.cs" />
+    <Compile Include="ChessEngine\Pieces\Pawn.cs" />
+    <Compile Include="ChessEngine\Pieces\Piece.cs" />
+    <Compile Include="ChessEngine\PieceColor.cs" />
+    <Compile Include="ChessEngine\Player.cs" />
+    <Compile Include="ChessEngine\Position.cs" />
+    <Compile Include="ChessEngine\Turn.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
