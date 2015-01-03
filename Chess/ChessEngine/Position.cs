@@ -1,8 +1,14 @@
 ﻿namespace Chess.ChessEngine
 {
-	struct Position
+	public struct Position
 	{
-		private int col;
-		private int row;
+		public int Col;
+		public int Row;
+
+		public Position(int col, int row)
+		{
+			Col = col;
+			Row = row;
+		}
 	}
 }

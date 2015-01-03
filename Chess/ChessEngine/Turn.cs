@@ -1,6 +1,6 @@
 ﻿namespace Chess.ChessEngine
 {
-	class Turn
+	public class Turn
 	{
 
 	}

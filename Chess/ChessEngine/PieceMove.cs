@@ -1,6 +1,6 @@
 ﻿namespace Chess.ChessEngine
 {
-	class PieceMove
+	public class PieceMove
 	{
 	}
 }

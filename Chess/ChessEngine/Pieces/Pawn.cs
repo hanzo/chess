@@ -9,6 +9,11 @@ namespace Chess.ChessEngine.Pieces
 		{
 		}
 
+		public override PieceType Type
+		{
+			get { return PieceType.Pawn; }
+		}
+
 		public override List<PieceMove> GetValidMoves()
 		{
 			throw new NotImplementedException();
