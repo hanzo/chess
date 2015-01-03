@@ -26,43 +26,93 @@ namespace ChessConsole
 		{
 			var board = match.BoardState(0);
 
-			Console.WriteLine("------------------");
+			Console.WriteLine("{0} player: {1}\n", match.PlayerOnTop.Color, match.PlayerOnTop.Name);
+			Console.WriteLine("   ------------------");
 
 			for (int row = 7; row >= 0; row--)
 			{
-				var printRowStr = "";
-				printRowStr += "|";
+				var printRowStr = " ";
+				printRowStr += row + 1;
+				printRowStr += " |";
 				for (int col = 0; col < 8; col++)
 				{
-					printRowStr += GetPieceString((PieceType) board[col, row]);
+					printRowStr += GetPieceString((PieceType)board[col, row].Item1, (PieceColor)board[col,row].Item2);
 				}
 				printRowStr += "|";
 				Console.WriteLine(printRowStr);
 			}
 
-			Console.WriteLine("------------------");
+			Console.WriteLine("   ------------------");
+			Console.WriteLine("    A B C D E F G H ");
+
+			Console.WriteLine("\n{0} player: {1}", match.PlayerOnBottom.Color, match.PlayerOnBottom.Name);
 		}
 
-		private static string GetPieceString(PieceType type)
+		private static string GetPieceString(PieceType type, PieceColor color)
+		{
+			char colorChar = (color == PieceColor.Black) ? '+' : ' ';
+
+			switch (type)
+			{
+				case PieceType.Pawn:
+					return "P" + colorChar;
+				case PieceType.Knight:
+					return "N" + colorChar;
+				case PieceType.Bishop:
+					return "B" + colorChar;
+				case PieceType.Rook:
+					return "R" + colorChar;
+				case PieceType.Queen:
+					return "Q" + colorChar;
+				case PieceType.King:
+					return "K" + colorChar;
+				default:
+					return "  ";
+			}
+		}
+
+		private static string GetPieceStringWithCaps(PieceType type, PieceColor color)
 		{
 			switch (type)
 			{
 				case PieceType.Pawn:
-					return "P ";
+					return (color == PieceColor.White ) ? "P " : "p ";
 				case PieceType.Knight:
-					return "Kn";
+					return (color == PieceColor.White) ? "N " : "n ";
 				case PieceType.Bishop:
-					return "B ";
+					return (color == PieceColor.White) ? "B " : "b ";
 				case PieceType.Rook:
-					return "R ";
+					return (color == PieceColor.White) ? "R " : "r ";
 				case PieceType.Queen:
-					return "Q ";
+					return (color == PieceColor.White) ? "Q " : "q ";
 				case PieceType.King:
-					return "Ki";
+					return (color == PieceColor.White) ? "K " : "k ";
 				default:
 					return "  ";
 			}
-
 		}
+
+		// Piece type only, not color
+
+		//private static string GetPieceString(PieceType type)
+		//{
+		//	switch (type)
+		//	{
+		//		case PieceType.Pawn:
+		//			return "P ";
+		//		case PieceType.Knight:
+		//			return "N ";
+		//		case PieceType.Bishop:
+		//			return "B ";
+		//		case PieceType.Rook:
+		//			return "R ";
+		//		case PieceType.Queen:
+		//			return "Q ";
+		//		case PieceType.King:
+		//			return "K ";
+		//		default:
+		//			return "  ";
+		//	}
+		//}
 	}
 }

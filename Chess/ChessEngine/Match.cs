@@ -6,9 +6,11 @@ namespace Chess.ChessEngine
 {
 	public class Match
 	{
+		// TODO: do we need both sets of player members? 
 		public Player WhitePlayer;
 		public Player BlackPlayer;
-		public PieceColor PlayerOnTop;
+		public Player PlayerOnTop;
+		public Player PlayerOnBottom;
 		
 		public List<Turn> Turns { get; private set; }
 
@@ -25,7 +27,8 @@ namespace Chess.ChessEngine
 
 			WhitePlayer = new Player(PieceColor.White, whitePlayerName);
 			BlackPlayer = new Player(PieceColor.Black, blackPlayerName);
-			PlayerOnTop = playerOnTop;
+			PlayerOnTop = (playerOnTop == PieceColor.White) ? WhitePlayer : BlackPlayer;
+			PlayerOnBottom = (playerOnTop == PieceColor.White) ? BlackPlayer : WhitePlayer;
 			Turns = new List<Turn>();
 			CurrentTurn = 0;
 
@@ -34,7 +37,7 @@ namespace Chess.ChessEngine
 
 		public void InitializeBoard()
 		{
-			if (PlayerOnTop == PieceColor.White)
+			if (PlayerOnTop.Color == PieceColor.White)
 			{
 				InitializeTopPlayer(WhitePlayer);
 				InitializeBottomPlayer(BlackPlayer);
@@ -52,7 +55,27 @@ namespace Chess.ChessEngine
 			for (int col = 0; col < 8; col++)
 			{
 				player.Pieces.Add(new Pawn(player.Color, new Position(col, 6)));
-			}			
+			}
+
+			// Set up back row
+			player.Pieces.Add(new Rook(player.Color, new Position(0,7)));
+			player.Pieces.Add(new Knight(player.Color, new Position(1, 7)));
+			player.Pieces.Add(new Bishop(player.Color, new Position(2, 7)));
+
+			if (player.Color == PieceColor.White)
+			{
+				player.Pieces.Add(new King(player.Color, new Position(3, 7)));
+				player.Pieces.Add(new Queen(player.Color, new Position(4, 7)));
+			}
+			else
+			{
+				player.Pieces.Add(new Queen(player.Color, new Position(3, 7)));
+				player.Pieces.Add(new King(player.Color, new Position(4, 7)));
+			}
+			
+			player.Pieces.Add(new Bishop(player.Color, new Position(5, 7)));
+			player.Pieces.Add(new Knight(player.Color, new Position(6, 7)));
+			player.Pieces.Add(new Rook(player.Color, new Position(7, 7)));
 		}
 
 		private void InitializeBottomPlayer(Player player)
@@ -62,6 +85,26 @@ namespace Chess.ChessEngine
 			{
 				player.Pieces.Add(new Pawn(player.Color, new Position(col, 1)));
 			}
+
+			// Set up back row
+			player.Pieces.Add(new Rook(player.Color, new Position(0, 0)));
+			player.Pieces.Add(new Knight(player.Color, new Position(1, 0)));
+			player.Pieces.Add(new Bishop(player.Color, new Position(2, 0)));
+
+			if (player.Color == PieceColor.White)
+			{
+				player.Pieces.Add(new Queen(player.Color, new Position(3, 0)));
+				player.Pieces.Add(new King(player.Color, new Position(4, 0)));
+			}
+			else
+			{
+				player.Pieces.Add(new King(player.Color, new Position(3, 0)));
+				player.Pieces.Add(new Queen(player.Color, new Position(4, 0)));
+			}
+
+			player.Pieces.Add(new Bishop(player.Color, new Position(5, 0)));
+			player.Pieces.Add(new Knight(player.Color, new Position(6, 0)));
+			player.Pieces.Add(new Rook(player.Color, new Position(7, 0)));
 		}
 
 		public void NextTurn()
@@ -79,16 +122,18 @@ namespace Chess.ChessEngine
 			
 		}
 
-		public int[,] BoardState(int turn)
+		// Return a representation of the board where each square contains two ints to indicate piece type and color
+		public Tuple<int,int>[,] BoardState(int turn)
 		{
-			var board = new int[8,8];
+			var board = new Tuple<int, int>[8, 8];
 
 			// can we skip initializing the board manually?
 			for (int col = 0; col < 8; col++)
 			{
 				for (int row = 0; row < 8; row++)
 				{
-					board[row, col] = 0;
+					// TODO: figure out how best to represent a square with no piece. I don't like using -1 as the default piece color
+					board[row, col] = new Tuple<int, int>(0, -1);
 				}
 			}
 
@@ -98,12 +143,41 @@ namespace Chess.ChessEngine
 			return board;
 		}
 
-		private void AddPlayersPiecesToBoard(int[,] board, Player player)
+		private void AddPlayersPiecesToBoard(Tuple<int, int>[,] board, Player player)
 		{
 			foreach (Piece piece in player.Pieces)
 			{
-				board[piece.CurrentPosition.Col, piece.CurrentPosition.Row] = (int)piece.Type;
+				board[piece.CurrentPosition.Col, piece.CurrentPosition.Row] = new Tuple<int, int>((int) piece.Type, (int)player.Color);
 			}
 		}
+
+
+		// These methods return an 8x8 array of ints, which is enough to represent piece type but not color
+		//public int[,] BoardState(int turn)
+		//{
+		//	var board = new int[8, 8];
+
+		//	// can we skip initializing the board manually?
+		//	for (int col = 0; col < 8; col++)
+		//	{
+		//		for (int row = 0; row < 8; row++)
+		//		{
+		//			board[row, col] = 0;
+		//		}
+		//	}
+
+		//	AddPlayersPiecesToBoard(board, WhitePlayer);
+		//	AddPlayersPiecesToBoard(board, BlackPlayer);
+
+		//	return board;
+		//}
+
+		//private void AddPlayersPiecesToBoard(int[,] board, Player player)
+		//{
+		//	foreach (Piece piece in player.Pieces)
+		//	{
+		//		board[piece.CurrentPosition.Col, piece.CurrentPosition.Row] = (int)piece.Type;
+		//	}
+		//}
 	}
 }

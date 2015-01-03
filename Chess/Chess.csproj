@@ -63,9 +63,14 @@
     </Compile>
     <Compile Include="ChessEngine\Match.cs" />
     <Compile Include="ChessEngine\PieceMove.cs" />
+    <Compile Include="ChessEngine\Pieces\Bishop.cs" />
+    <Compile Include="ChessEngine\Pieces\King.cs" />
+    <Compile Include="ChessEngine\Pieces\Knight.cs" />
     <Compile Include="ChessEngine\Pieces\Pawn.cs" />
     <Compile Include="ChessEngine\Pieces\Piece.cs" />
     <Compile Include="ChessEngine\PieceColor.cs" />
+    <Compile Include="ChessEngine\Pieces\Queen.cs" />
+    <Compile Include="ChessEngine\Pieces\Rook.cs" />
     <Compile Include="ChessEngine\PieceType.cs" />
     <Compile Include="ChessEngine\Player.cs" />
     <Compile Include="ChessEngine\Position.cs" />
