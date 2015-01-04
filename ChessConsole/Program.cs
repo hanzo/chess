@@ -20,6 +20,25 @@ namespace ChessConsole
 			var match = new Match(PieceColor.Black, "Gandalf the White", "Blackbeard");
 
 			PrintBoard(match);
+
+			PrintValidTurns(match.ActivePlayer, match.GetValidTurns(match.ActivePlayer));
+		}
+
+		private static void PrintValidTurns(Player activePlayer, List<Turn> validTurns)
+		{
+			Console.WriteLine("\nActive player: {0}. Valid moves: ", activePlayer.Color);
+			foreach (var turn in validTurns)
+			{
+				// TODO: print moves in proper algebraic notation
+
+				var turnPrintStr = "";
+				foreach (var move in turn.Moves)
+				{
+					turnPrintStr += String.Format("{0} -> {1}, ", move.StartPosition, move.EndPosition);
+				}
+				turnPrintStr = turnPrintStr.TrimEnd(',', ' '); // remove trailing comma
+				Console.WriteLine(turnPrintStr);
+			}
 		}
 
 		private static void PrintBoard(Match match)

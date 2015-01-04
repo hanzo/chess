@@ -14,9 +14,9 @@ namespace Chess.ChessEngine.Pieces
 			get { return PieceType.King; }
 		}
 
-		public override List<PieceMove> GetValidMoves()
+		public override List<Turn> GetValidTurns(Match match)
 		{
-			throw new NotImplementedException();
+			return new List<Turn>();
 		}
 	}
 }

@@ -16,6 +16,12 @@ namespace Chess.ChessEngine
 
 		public int CurrentTurn;
 
+		public Player ActivePlayer
+		{
+			// The white player always plays first on turn 0, so we can find the active player by checking if the turn number is even.
+			get { return CurrentTurn % 2 == 0 ? WhitePlayer : BlackPlayer; }
+		}
+
 		public Match(PieceColor playerOnTop, string whitePlayerName = null, string blackPlayerName = null)
 		{
 			// If no name was provided, give player the name "Black player" or "White player"
@@ -34,6 +40,8 @@ namespace Chess.ChessEngine
 
 			InitializeBoard();
 		}
+
+		#region Board initialization
 
 		public void InitializeBoard()
 		{
@@ -107,6 +115,24 @@ namespace Chess.ChessEngine
 			player.Pieces.Add(new Rook(player.Color, new Position(7, 0)));
 		}
 
+		#endregion
+
+		public List<Turn> GetValidTurns(Player activePlayer)
+		{
+			var validTurns = new List<Turn>();
+
+			foreach (var piece in activePlayer.Pieces)
+			{
+				// Captured pieces can't do anything
+				if (piece.IsCaptured)
+					continue;
+				
+				validTurns.AddRange(piece.GetValidTurns(this));
+			}
+
+			return validTurns;
+		}
+
 		public void NextTurn()
 		{
 			
@@ -133,7 +159,7 @@ namespace Chess.ChessEngine
 				for (int row = 0; row < 8; row++)
 				{
 					// TODO: figure out how best to represent a square with no piece. I don't like using -1 as the default piece color
-					board[row, col] = new Tuple<int, int>(0, -1);
+					board[col, row] = new Tuple<int, int>(0, -1);
 				}
 			}
 
