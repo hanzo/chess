@@ -19,7 +19,7 @@ namespace Chess.ChessEngine.Pieces
 			if (IsCaptured)
 				throw new Exception("GetValidTurns was called on a captured piece");
 
-			var board = match.BoardState(match.CurrentTurn);
+			var board = match.GetBoardState();
 
 			var validTurns = new List<Turn>();
 

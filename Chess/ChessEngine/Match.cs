@@ -11,8 +11,6 @@ namespace Chess.ChessEngine
 		public Player BlackPlayer;
 		public Player PlayerOnTop;
 		public Player PlayerOnBottom;
-		
-		public List<Turn> Turns { get; private set; }
 
 		public int CurrentTurn;
 
@@ -21,6 +19,10 @@ namespace Chess.ChessEngine
 			// The white player always plays first on turn 0, so we can find the active player by checking if the turn number is even.
 			get { return CurrentTurn % 2 == 0 ? WhitePlayer : BlackPlayer; }
 		}
+
+		private readonly List<Tuple<int, int>[,]> _boardStates;
+		private readonly List<Turn> _turns;
+		private List<Turn> _currentValidTurns;
 
 		public Match(PieceColor playerOnTop, string whitePlayerName = null, string blackPlayerName = null)
 		{
@@ -35,10 +37,14 @@ namespace Chess.ChessEngine
 			BlackPlayer = new Player(PieceColor.Black, blackPlayerName);
 			PlayerOnTop = (playerOnTop == PieceColor.White) ? WhitePlayer : BlackPlayer;
 			PlayerOnBottom = (playerOnTop == PieceColor.White) ? BlackPlayer : WhitePlayer;
-			Turns = new List<Turn>();
+			_turns = new List<Turn>();
+			_boardStates = new List<Tuple<int, int>[,]>();
 			CurrentTurn = 0;
 
 			InitializeBoard();
+
+			_boardStates.Add(ComputeCurrentBoardState()); // boardStates[0] is the starting board
+			_currentValidTurns = ComputeCurrentTurns(); // set CurrentValidTurns within the method?
 		}
 
 		#region Board initialization
@@ -117,16 +123,21 @@ namespace Chess.ChessEngine
 
 		#endregion
 
-		public List<Turn> GetValidTurns(Player activePlayer)
+		public List<Turn> GetCurrentValidTurns()
+		{
+			return _currentValidTurns;
+		}
+
+		private List<Turn> ComputeCurrentTurns()
 		{
 			var validTurns = new List<Turn>();
 
-			foreach (var piece in activePlayer.Pieces)
+			foreach (var piece in ActivePlayer.Pieces)
 			{
 				// Captured pieces can't do anything
 				if (piece.IsCaptured)
 					continue;
-				
+
 				validTurns.AddRange(piece.GetValidTurns(this));
 			}
 
@@ -148,8 +159,38 @@ namespace Chess.ChessEngine
 			
 		}
 
+		public List<Turn> ExecuteTurn(Turn turn)
+		{
+			if (!_currentValidTurns.Contains(turn))
+				throw new ArgumentException("An invalid turn was passed to ExecuteTurn.");
+
+			_turns.Add(turn);
+
+			foreach (var move in turn.Moves)
+			{
+				move.Piece.CurrentPosition = move.EndPosition;
+				// TODO: deal with captured pieces
+			}
+
+			CurrentTurn++;
+			_boardStates.Add(ComputeCurrentBoardState());
+			_currentValidTurns = ComputeCurrentTurns();
+
+			return _currentValidTurns;
+		}
+
+		public Tuple<int, int>[,] GetBoardState()
+		{
+			return _boardStates[CurrentTurn];
+		}
+
+		public Tuple<int, int>[,] GetBoardState(int turnNumber)
+		{
+			return _boardStates[turnNumber];
+		}
+
 		// Return a representation of the board where each square contains two ints to indicate piece type and color
-		public Tuple<int,int>[,] BoardState(int turn)
+		private Tuple<int,int>[,] ComputeCurrentBoardState()
 		{
 			var board = new Tuple<int, int>[8, 8];
 
@@ -173,37 +214,12 @@ namespace Chess.ChessEngine
 		{
 			foreach (Piece piece in player.Pieces)
 			{
-				board[piece.CurrentPosition.Col, piece.CurrentPosition.Row] = new Tuple<int, int>((int) piece.Type, (int)player.Color);
+				// TODO: might consider adding separate lists for captured pieces, that way player.Pieces only contains 'live' pieces
+				if (!piece.IsCaptured)
+				{
+					board[piece.CurrentPosition.Col, piece.CurrentPosition.Row] = new Tuple<int, int>((int)piece.Type, (int)player.Color);
+				}	
 			}
 		}
-
-
-		// These methods return an 8x8 array of ints, which is enough to represent piece type but not color
-		//public int[,] BoardState(int turn)
-		//{
-		//	var board = new int[8, 8];
-
-		//	// can we skip initializing the board manually?
-		//	for (int col = 0; col < 8; col++)
-		//	{
-		//		for (int row = 0; row < 8; row++)
-		//		{
-		//			board[row, col] = 0;
-		//		}
-		//	}
-
-		//	AddPlayersPiecesToBoard(board, WhitePlayer);
-		//	AddPlayersPiecesToBoard(board, BlackPlayer);
-
-		//	return board;
-		//}
-
-		//private void AddPlayersPiecesToBoard(int[,] board, Player player)
-		//{
-		//	foreach (Piece piece in player.Pieces)
-		//	{
-		//		board[piece.CurrentPosition.Col, piece.CurrentPosition.Row] = (int)piece.Type;
-		//	}
-		//}
 	}
 }
