@@ -12,12 +12,13 @@ namespace Chess.ChessEngine
 		public Player PlayerOnTop;
 		public Player PlayerOnBottom;
 
-		public int CurrentTurn;
+		public int LastTurn;
+		public int ViewingLastTurn;
 
 		public Player ActivePlayer
 		{
 			// The white player always plays first on turn 0, so we can find the active player by checking if the turn number is even.
-			get { return CurrentTurn % 2 == 0 ? WhitePlayer : BlackPlayer; }
+			get { return LastTurn % 2 == 0 ? WhitePlayer : BlackPlayer; }
 		}
 
 		private readonly List<Tuple<int, int>[,]> _boardStates;
@@ -39,7 +40,8 @@ namespace Chess.ChessEngine
 			PlayerOnBottom = (playerOnTop == PieceColor.White) ? BlackPlayer : WhitePlayer;
 			_turns = new List<Turn>();
 			_boardStates = new List<Tuple<int, int>[,]>();
-			CurrentTurn = 0;
+			LastTurn = 0;
+			ViewingLastTurn = 0;
 
 			InitializeBoard();
 
@@ -144,19 +146,50 @@ namespace Chess.ChessEngine
 			return validTurns;
 		}
 
-		public void NextTurn()
+
+		public bool NextTurn()
 		{
-			
+			if (ViewingLastTurn >= LastTurn)
+				return false;
+
+			ApplyTurn(_turns[ViewingLastTurn]);
+
+			ViewingLastTurn++;
+
+			return true;
 		}
 
-		public void PreviousTurn()
+		public bool PreviousTurn()
 		{
-			
+			if (ViewingLastTurn <= 0)
+				return false;
+
+			UndoTurn(_turns[ViewingLastTurn-1]);
+
+			ViewingLastTurn--;
+
+			return true;
 		}
 
-		public void GoToTurn(int turnNumber)
+		public bool GoToTurn(int newTurnNumber)
 		{
-			
+			if (newTurnNumber < 0 || newTurnNumber > LastTurn)
+				return false;
+
+			if (newTurnNumber < ViewingLastTurn)
+			{
+				while (PreviousTurn() && newTurnNumber < ViewingLastTurn)
+				{
+				}	
+			}
+			else
+			{
+				while (NextTurn() && newTurnNumber > ViewingLastTurn)
+				{
+				}	
+			}
+
+			return true;
 		}
 
 		public List<Turn> ExecuteTurn(Turn turn)
@@ -166,22 +199,37 @@ namespace Chess.ChessEngine
 
 			_turns.Add(turn);
 
-			foreach (var move in turn.Moves)
-			{
-				move.Piece.CurrentPosition = move.EndPosition;
-				// TODO: deal with captured pieces
-			}
+			ApplyTurn(turn);
 
-			CurrentTurn++;
+			LastTurn++;
+			ViewingLastTurn++;
 			_boardStates.Add(ComputeCurrentBoardState());
 			_currentValidTurns = ComputeCurrentTurns();
 
 			return _currentValidTurns;
 		}
 
+		private void ApplyTurn(Turn turn)
+		{
+			foreach (var move in turn.Moves)
+			{
+				move.Piece.CurrentPosition = move.EndPosition;
+				// TODO: deal with captured pieces
+			}
+		}
+
+		private void UndoTurn(Turn turn)
+		{
+			foreach (var move in turn.Moves)
+			{
+				move.Piece.CurrentPosition = move.StartPosition;
+				// TODO: deal with captured pieces
+			}
+		}
+
 		public Tuple<int, int>[,] GetBoardState()
 		{
-			return _boardStates[CurrentTurn];
+			return _boardStates[LastTurn];
 		}
 
 		public Tuple<int, int>[,] GetBoardState(int turnNumber)

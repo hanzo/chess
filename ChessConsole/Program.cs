@@ -26,7 +26,7 @@ namespace ChessConsole
 			{
 				PrintBoard(match);
 
-				PrintValidTurns(match.ActivePlayer, validTurns);
+				PrintValidTurns(match, validTurns);
 
 				int selectedTurn;
 
@@ -34,29 +34,74 @@ namespace ChessConsole
 				{
 					string userInput = Console.ReadLine();
 
+					if (userInput == null || String.IsNullOrWhiteSpace(userInput))
+					{
+						Console.WriteLine("Enter a command");
+						continue;
+					}
+
 					// TODO: find a less hacky way to print a specific turn via the command line
-					if (!String.IsNullOrWhiteSpace(userInput) && userInput.Contains("printturn"))
+					if (userInput.Contains("next"))
+					{
+						if (match.NextTurn())
+						{
+							PrintBoard(match);
+
+							// If we're at the latest state of the board, print the available moves again
+							if (match.ViewingLastTurn == match.LastTurn)
+								PrintValidTurns(match, validTurns);
+						}
+						else
+						{
+							Console.WriteLine("This is the latest turn");
+						}
+						continue;
+					}
+					else if (userInput.Contains("prev"))
+					{
+						if (match.PreviousTurn())
+						{
+							PrintBoard(match);
+						}
+						else
+						{
+							Console.WriteLine("This is the start of the game");
+						}
+						continue;
+					}
+					else if (userInput.Contains("gototurn"))
 					{
 						var tokens = userInput.Split(' ');
 
 						if (tokens.Length == 2)
 						{
-							int turnToPrint;
 							try
 							{
-								turnToPrint = Convert.ToInt32(tokens[1]);
+								int newTurnNum = Convert.ToInt32(tokens[1]);
+								if (match.GoToTurn(newTurnNum))
+								{
+									PrintBoard(match);
+
+									// If we're at the latest state of the board, print the available moves again
+									if (match.ViewingLastTurn == match.LastTurn)
+										PrintValidTurns(match, validTurns);
+								}
+								else
+								{
+									Console.WriteLine("Must choose a turn number between 0 and " + match.LastTurn);									
+								}
 							}
 							catch (Exception)
 							{
-								Console.WriteLine("Usage: printturn [turn number]");
+								Console.WriteLine("Usage: gototturn [turn number]");
 								continue;
 							}
-							PrintBoard(match, turnToPrint);
+							
 							continue;
 						}
 						else
 						{
-							Console.WriteLine("Usage: printturn [turn number]");
+							Console.WriteLine("Usage: gototurn [turn number]");
 							continue;
 						}
 					}
@@ -89,9 +134,10 @@ namespace ChessConsole
 			}
 		}
 
-		private static void PrintValidTurns(Player activePlayer, List<Turn> validTurns)
+		// This should only be called to print valid moves as of the latest state of the board
+		private static void PrintValidTurns(Match match, List<Turn> validTurns)
 		{
-			Console.WriteLine("\nActive player: {0}. Valid plays: ", activePlayer.Color);
+			Console.WriteLine("\nActive player: {0}. Valid plays: ", match.ActivePlayer.Color);
 			for (int turnNum = 0; turnNum < validTurns.Count; turnNum++)
 			{
 				// TODO: print moves in proper algebraic notation
@@ -110,13 +156,24 @@ namespace ChessConsole
 			Console.Write("Enter the number corresponding to your desired move and hit enter: ");
 		}
 
-		private static void PrintBoard(Match match, int turnNumber = -1)
+		private static void PrintBoard(Match match)
 		{
-			if (turnNumber == -1)
-				turnNumber = match.CurrentTurn;
+			var board = match.GetBoardState(match.ViewingLastTurn);
 
-			var board = match.GetBoardState(turnNumber);
+			string boardTitleStr = "\n----------";
+			if (match.ViewingLastTurn == 0)
+			{
+				boardTitleStr += "Starting board";
+			}
+			else
+			{
+				boardTitleStr += (match.ViewingLastTurn == match.LastTurn)
+					? String.Format("Board after turn {0}", match.LastTurn)
+					: String.Format("Board after turn {0} of {1}", match.ViewingLastTurn, match.LastTurn);	
+			}
+			boardTitleStr += "----------\n";
 
+			Console.WriteLine(boardTitleStr);
 			Console.WriteLine("{0} player: {1}\n", match.PlayerOnTop.Color, match.PlayerOnTop.Name);
 			Console.WriteLine("   ------------------");
 
