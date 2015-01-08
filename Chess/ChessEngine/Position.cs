@@ -2,6 +2,9 @@
 
 namespace Chess.ChessEngine
 {
+	/// <summary>
+	/// A location on the chess board.
+	/// </summary>
 	public struct Position
 	{
 		public int Col;
@@ -13,7 +16,10 @@ namespace Chess.ChessEngine
 			Row = row;
 		}
 
-		// Convert the integer coordinates to chess notation, e.g. 0,0 becomes A1.
+		/// <summary>
+		/// Convert the integer coordinates to chess board notation, e.g. 0,0 becomes A1.
+		/// </summary>
+		/// <returns>The chess notation for the location on the board, e.g. A1.</returns>
 		public override string ToString()
 		{
 			return String.Format("{0}{1}", GetColumnCharacter(Col), Row + 1);

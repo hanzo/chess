@@ -2,6 +2,9 @@
 
 namespace Chess.ChessEngine.Pieces
 {
+	/// <summary>
+	/// Base class to represent a chess piece.
+	/// </summary>
 	public abstract class Piece
 	{
 		public PieceColor Color { get; private set; }

@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Chess.ChessEngine;
 
 namespace ChessConsole
@@ -19,7 +15,7 @@ namespace ChessConsole
 		{
 			var match = new Match(PieceColor.Black, "Gandalf the White", "Blackbeard");
 
-			var validTurns = match.GetCurrentValidTurns();
+			var validTurns = match.CurrentValidTurns;
 
 			// TODO: update this loop condition to quit once we know when the game is over
 			while (true)
@@ -34,14 +30,12 @@ namespace ChessConsole
 				{
 					string userInput = Console.ReadLine();
 
+					// TODO: find a less hacky way to input commands
 					if (userInput == null || String.IsNullOrWhiteSpace(userInput))
 					{
 						Console.WriteLine("Enter a command");
-						continue;
 					}
-
-					// TODO: find a less hacky way to print a specific turn via the command line
-					if (userInput.Contains("next"))
+					else if (userInput.Contains("next"))
 					{
 						if (match.NextTurn())
 						{
@@ -55,7 +49,6 @@ namespace ChessConsole
 						{
 							Console.WriteLine("This is the latest turn");
 						}
-						continue;
 					}
 					else if (userInput.Contains("prev"))
 					{
@@ -67,70 +60,77 @@ namespace ChessConsole
 						{
 							Console.WriteLine("This is the start of the game");
 						}
-						continue;
 					}
 					else if (userInput.Contains("gototurn"))
 					{
 						var tokens = userInput.Split(' ');
 
-						if (tokens.Length == 2)
-						{
-							try
-							{
-								int newTurnNum = Convert.ToInt32(tokens[1]);
-								if (match.GoToTurn(newTurnNum))
-								{
-									PrintBoard(match);
-
-									// If we're at the latest state of the board, print the available moves again
-									if (match.ViewingLastTurn == match.LastTurn)
-										PrintValidTurns(match, validTurns);
-								}
-								else
-								{
-									Console.WriteLine("Must choose a turn number between 0 and " + match.LastTurn);									
-								}
-							}
-							catch (Exception)
-							{
-								Console.WriteLine("Usage: gototturn [turn number]");
-								continue;
-							}
-							
-							continue;
-						}
-						else
+						if (tokens.Length != 2)
 						{
 							Console.WriteLine("Usage: gototurn [turn number]");
-							continue;
+						}
+
+						try
+						{
+							int newTurnNum = Convert.ToInt32(tokens[1]);
+							if (match.GoToTurn(newTurnNum))
+							{
+								PrintBoard(match);
+
+								// If we're at the latest state of the board, print the available moves again
+								if (match.ViewingLastTurn == match.LastTurn)
+									PrintValidTurns(match, validTurns);
+							}
+							else
+							{
+								Console.WriteLine("Must choose a turn number between 0 and " + match.LastTurn);
+							}
+						}
+						catch (Exception)
+						{
+							Console.WriteLine("Usage: gototturn [turn number]");
 						}
 					}
-
-					try
+					else if (userInput.Contains("gotostart"))
 					{
-						selectedTurn = Convert.ToInt32(userInput);
+						match.GoToStart();
+						PrintBoard(match);
 					}
-					catch (Exception)
+					else if (userInput.Contains("gotoend"))
 					{
-						Console.WriteLine("Choose the number corresponding to the desired move number, e.g. '2'");
-						continue;
+						match.GoToEnd();
+						PrintBoard(match);
+						PrintValidTurns(match, validTurns);
 					}
-
-					// Turns are printed with 1-indexing, so we need to undo that to match the array
-					selectedTurn -= 1;
-
-					if (selectedTurn < 0 || selectedTurn >= validTurns.Count)
+					else  // assume user input is a number signifying a turn to submit
 					{
-						Console.WriteLine("Choose the number corresponding to the desired move number, e.g. '2'");
-						continue;
-					}
+						try
+						{
+							selectedTurn = Convert.ToInt32(userInput);
+						}
+						catch (Exception)
+						{
+							Console.WriteLine("Choose the number corresponding to the desired move number, e.g. '2'");
+							continue;
+						}
 
-					// TODO: improve this flow
-					break;
+						// Turns are printed with 1-indexing, so we need to undo that to match the array
+						selectedTurn -= 1;
+
+						if (selectedTurn < 0 || selectedTurn >= validTurns.Count)
+						{
+							Console.WriteLine("Choose the number corresponding to the desired move number, e.g. '2'");
+							continue;
+						}
+
+						// we only break from the inner while loop when the user submits a new move to advance the state of the game
+						// TODO: improve this flow
+						break;
+					}
 				}
 
 				// Execute the selected turn and update validTurns with the new set of possible turns (for the other player)
-				validTurns = match.ExecuteTurn(validTurns[selectedTurn]);
+				validTurns = match.ExecuteNewTurn(validTurns[selectedTurn]);
 			}
 		}
 
@@ -147,7 +147,9 @@ namespace ChessConsole
 				var turnPrintStr = String.Format("{0}.\t", turnNum + 1);
 				foreach (var move in turn.Moves)
 				{
-					turnPrintStr += String.Format("{0} -> {1}, ", move.StartPosition, move.EndPosition);
+					turnPrintStr += (move.IsCaptured) 
+						? String.Format("{0} captured, ", move.StartPosition)
+						: String.Format("{0} -> {1}, ", move.StartPosition, move.EndPosition);
 				}
 
 				turnPrintStr = turnPrintStr.TrimEnd(',', ' '); // remove trailing comma
@@ -160,7 +162,7 @@ namespace ChessConsole
 		{
 			var board = match.GetBoardState(match.ViewingLastTurn);
 
-			string boardTitleStr = "\n----------";
+			string boardTitleStr = "\n---------- ";
 			if (match.ViewingLastTurn == 0)
 			{
 				boardTitleStr += "Starting board";
@@ -171,7 +173,7 @@ namespace ChessConsole
 					? String.Format("Board after turn {0}", match.LastTurn)
 					: String.Format("Board after turn {0} of {1}", match.ViewingLastTurn, match.LastTurn);	
 			}
-			boardTitleStr += "----------\n";
+			boardTitleStr += " ----------\n";
 
 			Console.WriteLine(boardTitleStr);
 			Console.WriteLine("{0} player: {1}\n", match.PlayerOnTop.Color, match.PlayerOnTop.Name);
@@ -218,49 +220,5 @@ namespace ChessConsole
 					return "  ";
 			}
 		}
-
-		private static string GetPieceStringWithCaps(PieceType type, PieceColor color)
-		{
-			switch (type)
-			{
-				case PieceType.Pawn:
-					return (color == PieceColor.White ) ? "P " : "p ";
-				case PieceType.Knight:
-					return (color == PieceColor.White) ? "N " : "n ";
-				case PieceType.Bishop:
-					return (color == PieceColor.White) ? "B " : "b ";
-				case PieceType.Rook:
-					return (color == PieceColor.White) ? "R " : "r ";
-				case PieceType.Queen:
-					return (color == PieceColor.White) ? "Q " : "q ";
-				case PieceType.King:
-					return (color == PieceColor.White) ? "K " : "k ";
-				default:
-					return "  ";
-			}
-		}
-
-		// Piece type only, not color
-
-		//private static string GetPieceString(PieceType type)
-		//{
-		//	switch (type)
-		//	{
-		//		case PieceType.Pawn:
-		//			return "P ";
-		//		case PieceType.Knight:
-		//			return "N ";
-		//		case PieceType.Bishop:
-		//			return "B ";
-		//		case PieceType.Rook:
-		//			return "R ";
-		//		case PieceType.Queen:
-		//			return "Q ";
-		//		case PieceType.King:
-		//			return "K ";
-		//		default:
-		//			return "  ";
-		//	}
-		//}
 	}
 }

@@ -26,7 +26,6 @@ namespace Chess.ChessEngine.Pieces
 			// Pawns can only move in one direction. The pawn will move up or down rows depending on which player it belongs to.
 			int rowForwardModifier = (match.ActivePlayer == match.PlayerOnBottom) ? 1 : -1;
 
-
 			// TODO: make sure to account for check/checkmate etc! 
 
 			var newCol = CurrentPosition.Col;
@@ -41,7 +40,6 @@ namespace Chess.ChessEngine.Pieces
 						}));
 			}
 
-			// TODO: verify this comparison works as expected
 			// If a pawn hasn't yet moved, it can move two spaces instead of one.
 			if (CurrentPosition.Equals(StartingPosition))
 			{
@@ -59,7 +57,30 @@ namespace Chess.ChessEngine.Pieces
 				}
 			}
 
-			// TODO: check for pawn's ability to attack diagonally
+			// Check for pawn's ability to attack diagonally
+			foreach (int columnModifier in new List<int> { 1, -1})
+			{
+				newCol = CurrentPosition.Col + columnModifier;
+
+				if (newCol < 0 || newCol > 7)
+					continue;
+
+				newRow = CurrentPosition.Row + rowForwardModifier;
+
+				var diagonalSpace = board[newCol, newRow];
+
+				if (diagonalSpace.Item1 != 0 && (PieceColor)diagonalSpace.Item2 != Color) // check if space is occupied by an opposing piece
+				{
+					Piece capturedPiece = match.GetPieceAtPosition(newCol, newRow);
+
+					validTurns.Add(
+					new Turn(
+						new List<PieceMove>{
+							new PieceMove(this, CurrentPosition, new Position(newCol, newRow)),  // capturing pawn
+							new PieceMove(capturedPiece, capturedPiece.CurrentPosition, capturedPiece.CurrentPosition, true /*captured*/),  // captured piece
+						}));
+				}
+			}
 
 			return validTurns;
 		}

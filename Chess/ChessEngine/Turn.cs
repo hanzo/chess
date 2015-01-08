@@ -2,6 +2,9 @@
 
 namespace Chess.ChessEngine
 {
+	/// <summary>
+	/// Represents a single turn by a player.
+	/// </summary>
 	public class Turn
 	{
 		public List<PieceMove> Moves;

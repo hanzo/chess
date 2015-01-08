@@ -3,6 +3,9 @@ using Chess.ChessEngine.Pieces;
 
 namespace Chess.ChessEngine
 {
+	/// <summary>
+	/// One of the two players in a chess match.
+	/// </summary>
 	public class Player
 	{
 		public string Name { get; private set; }

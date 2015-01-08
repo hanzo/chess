@@ -4,6 +4,9 @@ using Chess.ChessEngine.Pieces;
 
 namespace Chess.ChessEngine
 {
+	/// <summary>
+	/// Represents a chess match between two players.
+	/// </summary>
 	public class Match
 	{
 		// TODO: do we need both sets of player members? 
@@ -12,18 +15,37 @@ namespace Chess.ChessEngine
 		public Player PlayerOnTop;
 		public Player PlayerOnBottom;
 
-		public int LastTurn;
-		public int ViewingLastTurn;
-
+		/// <summary>
+		/// Returns the Player whose turn it is at the current state of the game.
+		/// </summary>
 		public Player ActivePlayer
 		{
 			// The white player always plays first on turn 0, so we can find the active player by checking if the turn number is even.
 			get { return LastTurn % 2 == 0 ? WhitePlayer : BlackPlayer; }
 		}
 
+		/// <summary>
+		/// The number of the last turn that has been played in the match.
+		/// </summary>
+		public int LastTurn;
+
+		/// <summary>
+		/// The last turn that was played as of the board state that is currently being viewed.
+		/// </summary>
+		public int ViewingLastTurn;
+
+		/// <summary>
+		/// The list of valid turns available as of the latest state of the game.
+		/// </summary>
+		public List<Turn> CurrentValidTurns { get; private set; }
+
+		// A board state is an 8x8 integer pair representation of the board after each move. 
+		// Board state 0 is the starting state of the board.
 		private readonly List<Tuple<int, int>[,]> _boardStates;
+
+		// Each turn represents the change in board state as a result of a player's turn.
+		// Turn 0 is the first turn played by the White player.
 		private readonly List<Turn> _turns;
-		private List<Turn> _currentValidTurns;
 
 		public Match(PieceColor playerOnTop, string whitePlayerName = null, string blackPlayerName = null)
 		{
@@ -46,12 +68,15 @@ namespace Chess.ChessEngine
 			InitializeBoard();
 
 			_boardStates.Add(ComputeCurrentBoardState()); // boardStates[0] is the starting board
-			_currentValidTurns = ComputeCurrentTurns(); // set CurrentValidTurns within the method?
+			CurrentValidTurns = ComputeCurrentTurns(); // set CurrentValidTurns within the method?
 		}
 
 		#region Board initialization
 
-		public void InitializeBoard()
+		/// <summary>
+		/// Set up the pieces on the board in their initial locations.
+		/// </summary>
+		private void InitializeBoard()
 		{
 			if (PlayerOnTop.Color == PieceColor.White)
 			{
@@ -65,6 +90,7 @@ namespace Chess.ChessEngine
 			}
 		}
 
+		// Add to the board the pieces of the player on the top side of the board.
 		private void InitializeTopPlayer(Player player)
 		{
 			// Set up pawns
@@ -94,6 +120,7 @@ namespace Chess.ChessEngine
 			player.Pieces.Add(new Rook(player.Color, new Position(7, 7)));
 		}
 
+		// Add to the board the pieces of the player on the bottom side of the board.
 		private void InitializeBottomPlayer(Player player)
 		{
 			// Set up pawns
@@ -125,11 +152,7 @@ namespace Chess.ChessEngine
 
 		#endregion
 
-		public List<Turn> GetCurrentValidTurns()
-		{
-			return _currentValidTurns;
-		}
-
+		// Return a list of all valid turns available as of the latest state of the game.
 		private List<Turn> ComputeCurrentTurns()
 		{
 			var validTurns = new List<Turn>();
@@ -146,7 +169,10 @@ namespace Chess.ChessEngine
 			return validTurns;
 		}
 
-
+		/// <summary>
+		/// Advance the currently viewed state of the board to the next turn.
+		/// </summary>
+		/// <returns>True if the board state was advanced, false if the currently viewed turn is the most recent turn.</returns>
 		public bool NextTurn()
 		{
 			if (ViewingLastTurn >= LastTurn)
@@ -159,6 +185,10 @@ namespace Chess.ChessEngine
 			return true;
 		}
 
+		/// <summary>
+		/// Move back the currently viewed state of the board to the previous turn.
+		/// </summary>
+		/// <returns>True if the board state was moved back, false if the currently viewed turn is the start of the match.</returns>
 		public bool PreviousTurn()
 		{
 			if (ViewingLastTurn <= 0)
@@ -171,6 +201,11 @@ namespace Chess.ChessEngine
 			return true;
 		}
 
+		/// <summary>
+		/// Move the state of the board forward or backward until the given turn number is reached.
+		/// </summary>
+		/// <param name="newTurnNumber">The desired turn number to view.</param>
+		/// <returns>True if the board state was moved forward or back, false otherwise.</returns>
 		public bool GoToTurn(int newTurnNumber)
 		{
 			if (newTurnNumber < 0 || newTurnNumber > LastTurn)
@@ -192,9 +227,32 @@ namespace Chess.ChessEngine
 			return true;
 		}
 
-		public List<Turn> ExecuteTurn(Turn turn)
+		/// <summary>
+		/// Revert the board state to its starting position. 
+		/// </summary>
+		/// <returns>True if the board state was moved back, false if the currently viewed turn is the start of the match.</returns>
+		public bool GoToStart()
 		{
-			if (!_currentValidTurns.Contains(turn))
+			return GoToTurn(0);
+		}
+
+		/// <summary>
+		/// Advance the board state to the latest state of the game.
+		/// </summary>
+		/// <returns>True if the board state was advanced, false if the currently viewed turn is the most recent turn.</returns>
+		public bool GoToEnd()
+		{
+			return GoToTurn(LastTurn);
+		}
+
+		/// <summary>
+		/// Applies the given turn to the latest state of the board and advances to the next turn.
+		/// </summary>
+		/// <param name="turn">The turn played by the active player.</param>
+		/// <returns>The list of valid turns after the given turn was applied.</returns>
+		public List<Turn> ExecuteNewTurn(Turn turn)
+		{
+			if (!CurrentValidTurns.Contains(turn))
 				throw new ArgumentException("An invalid turn was passed to ExecuteTurn.");
 
 			_turns.Add(turn);
@@ -204,34 +262,57 @@ namespace Chess.ChessEngine
 			LastTurn++;
 			ViewingLastTurn++;
 			_boardStates.Add(ComputeCurrentBoardState());
-			_currentValidTurns = ComputeCurrentTurns();
+			CurrentValidTurns = ComputeCurrentTurns();
 
-			return _currentValidTurns;
+			return CurrentValidTurns;
 		}
 
+		// Update the state of all pieces affected by the given turn.
 		private void ApplyTurn(Turn turn)
 		{
 			foreach (var move in turn.Moves)
 			{
-				move.Piece.CurrentPosition = move.EndPosition;
-				// TODO: deal with captured pieces
+				if (move.IsCaptured)
+				{
+					move.Piece.IsCaptured = true;
+				}
+				else
+				{
+					move.Piece.CurrentPosition = move.EndPosition;
+				}	
 			}
 		}
 
+		// Revert the state of all pieces affected by the given turn.
 		private void UndoTurn(Turn turn)
 		{
 			foreach (var move in turn.Moves)
 			{
-				move.Piece.CurrentPosition = move.StartPosition;
-				// TODO: deal with captured pieces
+				if (move.IsCaptured)
+				{
+					move.Piece.IsCaptured = false;
+				}
+				else
+				{
+					move.Piece.CurrentPosition = move.StartPosition;			
+				}
 			}
 		}
 
+		/// <summary>
+		/// The board state as of the latest turn of the game.
+		/// </summary>
+		/// <returns>The board state as of the latest turn of the game.</returns>
 		public Tuple<int, int>[,] GetBoardState()
 		{
 			return _boardStates[LastTurn];
 		}
 
+		/// <summary>
+		/// The board state as of the given turn.
+		/// </summary>
+		/// <param name="turnNumber">The desired turn number.</param>
+		/// <returns>The board state as of the given turn.</returns>
 		public Tuple<int, int>[,] GetBoardState(int turnNumber)
 		{
 			return _boardStates[turnNumber];
@@ -258,6 +339,7 @@ namespace Chess.ChessEngine
 			return board;
 		}
 
+		// Add the pieces of the given player to the board.
 		private void AddPlayersPiecesToBoard(Tuple<int, int>[,] board, Player player)
 		{
 			foreach (Piece piece in player.Pieces)
@@ -268,6 +350,24 @@ namespace Chess.ChessEngine
 					board[piece.CurrentPosition.Col, piece.CurrentPosition.Row] = new Tuple<int, int>((int)piece.Type, (int)player.Color);
 				}	
 			}
+		}
+
+		/// <summary>
+		/// Return the piece located at the given location on the board.
+		/// </summary>
+		/// <returns>The piece at the given location if one exists, else null.</returns>
+		public Piece GetPieceAtPosition(int column, int row)
+		{
+			// TODO: find a more efficient way of doing this
+			foreach (Player player in new List<Player>{WhitePlayer, BlackPlayer})
+			{
+				foreach (Piece piece in player.Pieces)
+				{
+					if (piece.CurrentPosition.Col == column && piece.CurrentPosition.Row == row)
+						return piece;
+				}
+			}
+			return null;
 		}
 	}
 }

@@ -2,19 +2,34 @@
 
 namespace Chess.ChessEngine
 {
+	/// <summary>
+	/// The change in state of a single piece as part of a player's turn.
+	/// </summary>
 	public class PieceMove
 	{
 		public Piece Piece;
-		public Position StartPosition;
-		public Position EndPosition;
-		public bool Captured;
 
-		public PieceMove(Piece piece, Position startPosition, Position endPosition, bool captured = false)
+		/// <summary>
+		/// The piece's postion before the turn.
+		/// </summary>
+		public Position StartPosition;
+
+		/// <summary>
+		/// The piece's position after the turn.
+		/// </summary>
+		public Position EndPosition;
+
+		/// <summary>
+		/// True if the piece was captured this turn, false otherwise.
+		/// </summary>
+		public bool IsCaptured;
+
+		public PieceMove(Piece piece, Position startPosition, Position endPosition, bool isCaptured = false)
 		{
 			Piece = piece;
 			StartPosition = startPosition;
 			EndPosition = endPosition;
-			Captured = captured;
+			IsCaptured = isCaptured;
 		}
 	}
 }
