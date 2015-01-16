@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Chess.ChessEngine;
+using Chess.ChessEngine.Pieces;
 using NUnit.Framework;
 
 namespace ChessEngineTest
@@ -128,9 +129,17 @@ namespace ChessEngineTest
 		public void CapturePawn()
 		{
 			Match match = new Match(PieceColor.Black, "White", "Black");
+			Piece whiteA2Pawn = match.GetPieceAtPosition(0, 1);
+			Piece blackB7Pawn = match.GetPieceAtPosition(1, 6);
+			Assert.That(whiteA2Pawn.CaptureCount == 0);
+			Assert.That(blackB7Pawn.CaptureCount == 0);
+
 			match.ExecuteNewTurn(match.CurrentValidTurns[1]); // A2 -> A4
 			match.ExecuteNewTurn(match.CurrentValidTurns[3]); // B7 -> B5
 			match.ExecuteNewTurn(match.CurrentValidTurns[1]); // A4 takes B5
+
+			Assert.That(blackB7Pawn.IsCaptured);
+			Assert.That(whiteA2Pawn.CaptureCount == 1);
 
 			Assert.That(match.CurrentActivePlayer.Color, Is.EqualTo(PieceColor.Black));
 			Assert.That(match.ViewingActivePlayer.Color, Is.EqualTo(PieceColor.Black));

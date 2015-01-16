@@ -83,8 +83,8 @@ namespace Chess.ChessEngine.Pieces
 					validTurns.Add(
 					new Turn(
 						new List<PieceMove>{
-							new PieceMove(this, CurrentPosition, new Position(newCol, newRow)),  // capturing pawn
-							new PieceMove(capturedPiece, capturedPiece.CurrentPosition, capturedPiece.CurrentPosition, true /*captured*/),  // captured piece
+							new PieceMove(this, CurrentPosition, new Position(newCol, newRow), isCapturing:true, isCaptured:false),  // capturing pawn
+							new PieceMove(capturedPiece, capturedPiece.CurrentPosition, capturedPiece.CurrentPosition, isCapturing:false, isCaptured:true),  // captured piece
 						}));
 				}
 			}

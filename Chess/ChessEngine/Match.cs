@@ -281,6 +281,11 @@ namespace Chess.ChessEngine
 				}
 				else
 				{
+					if (move.IsCapturing)
+					{
+						move.Piece.CaptureCount++;
+					}
+
 					move.Piece.CurrentPosition = move.EndPosition;
 				}	
 			}
@@ -360,7 +365,7 @@ namespace Chess.ChessEngine
 			// TODO: find a more efficient way of doing this
 			foreach (Player player in new List<Player>{WhitePlayer, BlackPlayer})
 			{
-				foreach (Piece piece in player.Pieces)
+				foreach (Piece piece in player.ActivePieces)
 				{
 					if (piece.CurrentPosition.Col == column && piece.CurrentPosition.Row == row)
 						return piece;

@@ -20,15 +20,21 @@ namespace Chess.ChessEngine
 		public Position EndPosition;
 
 		/// <summary>
+		/// True if the piece is capturing another piece this turn, false otherwise.
+		/// </summary>
+		public bool IsCapturing;
+
+		/// <summary>
 		/// True if the piece was captured this turn, false otherwise.
 		/// </summary>
 		public bool IsCaptured;
 
-		public PieceMove(Piece piece, Position startPosition, Position endPosition, bool isCaptured = false)
+		public PieceMove(Piece piece, Position startPosition, Position endPosition, bool isCapturing = false, bool isCaptured = false)
 		{
 			Piece = piece;
 			StartPosition = startPosition;
 			EndPosition = endPosition;
+			IsCapturing = isCapturing;
 			IsCaptured = isCaptured;
 		}
 	}

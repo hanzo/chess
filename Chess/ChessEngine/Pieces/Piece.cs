@@ -13,6 +13,7 @@ namespace Chess.ChessEngine.Pieces
 		public Position StartingPosition { get; private set; }
 		public Position CurrentPosition { get; set; }
 		public bool IsCaptured { get; set; }
+		public int CaptureCount { get; set; }
 
 		protected Piece(PieceColor color, Position startPos)
 		{
@@ -20,6 +21,7 @@ namespace Chess.ChessEngine.Pieces
 			StartingPosition = startPos;
 			CurrentPosition = startPos;
 			IsCaptured = false;
+			CaptureCount = 0;
 		}
 
 		// TODO: Should the Piece class hold a reference to its parent Match object instead of passing it as a param?
