@@ -137,7 +137,7 @@ namespace ChessConsole
 		// This should only be called to print valid moves as of the latest state of the board
 		private static void PrintValidTurns(Match match, List<Turn> validTurns)
 		{
-			Console.WriteLine("\nActive player: {0}. Valid plays: ", match.ActivePlayer.Color);
+			Console.WriteLine("\nActive player: {0}. Valid plays: ", match.CurrentActivePlayer.Color);
 			for (int turnNum = 0; turnNum < validTurns.Count; turnNum++)
 			{
 				// TODO: print moves in proper algebraic notation

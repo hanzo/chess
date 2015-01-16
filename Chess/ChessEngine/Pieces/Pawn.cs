@@ -24,12 +24,19 @@ namespace Chess.ChessEngine.Pieces
 			var validTurns = new List<Turn>();
 
 			// Pawns can only move in one direction. The pawn will move up or down rows depending on which player it belongs to.
-			int rowForwardModifier = (match.ActivePlayer == match.PlayerOnBottom) ? 1 : -1;
+			int rowForwardModifier = (match.CurrentActivePlayer == match.PlayerOnBottom) ? 1 : -1;
 
 			// TODO: make sure to account for check/checkmate etc! 
 
 			var newCol = CurrentPosition.Col;
 			var newRow = CurrentPosition.Row + rowForwardModifier;
+
+			// TODO: determine if a pawn should be promoted once it reaches the other side of the board. Remove this once promoting pawns is supported
+			if (newRow < 0 || newRow > 7)
+			{
+				return new List<Turn>();
+			}
+
 			var oneSpaceAhead = board[newCol, newRow];
 			if (oneSpaceAhead.Item1 == 0) // check if space is unoccupied
 			{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Chess.ChessEngine.Pieces;
 
 namespace Chess.ChessEngine
@@ -18,10 +19,16 @@ namespace Chess.ChessEngine
 		/// <summary>
 		/// Returns the Player whose turn it is at the current state of the game.
 		/// </summary>
-		public Player ActivePlayer
+		public Player CurrentActivePlayer
 		{
 			// The white player always plays first on turn 0, so we can find the active player by checking if the turn number is even.
 			get { return LastTurn % 2 == 0 ? WhitePlayer : BlackPlayer; }
+		}
+
+		public Player ViewingActivePlayer
+		{
+			// The white player always plays first on turn 0, so we can find the active player by checking if the turn number is even.
+			get { return ViewingLastTurn % 2 == 0 ? WhitePlayer : BlackPlayer; }
 		}
 
 		/// <summary>
@@ -157,12 +164,8 @@ namespace Chess.ChessEngine
 		{
 			var validTurns = new List<Turn>();
 
-			foreach (var piece in ActivePlayer.Pieces)
+			foreach (var piece in CurrentActivePlayer.ActivePieces)
 			{
-				// Captured pieces can't do anything
-				if (piece.IsCaptured)
-					continue;
-
 				validTurns.AddRange(piece.GetValidTurns(this));
 			}
 
@@ -342,13 +345,9 @@ namespace Chess.ChessEngine
 		// Add the pieces of the given player to the board.
 		private void AddPlayersPiecesToBoard(Tuple<int, int>[,] board, Player player)
 		{
-			foreach (Piece piece in player.Pieces)
+			foreach (Piece piece in player.ActivePieces)
 			{
-				// TODO: might consider adding separate lists for captured pieces, that way player.Pieces only contains 'live' pieces
-				if (!piece.IsCaptured)
-				{
-					board[piece.CurrentPosition.Col, piece.CurrentPosition.Row] = new Tuple<int, int>((int)piece.Type, (int)player.Color);
-				}	
+				board[piece.CurrentPosition.Col, piece.CurrentPosition.Row] = new Tuple<int, int>((int) piece.Type, (int) player.Color);
 			}
 		}
 
